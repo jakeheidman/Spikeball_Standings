@@ -14,13 +14,7 @@ class Player:
         self.points = points
 
 
-class Tournament:
-    def __init__(self, name, multiplier):
-        self.name = name
-        self.multiplier = multiplier
-
-
-def advanced_scrape():  # returns advanced player dictionary of {name : point} pairs
+def advanced_players():  # returns advanced player dictionary of {name : point} pairs
     url = "https://docs.google.com/spreadsheets/d/1yLuwRyMC5N3eQps45PXoBHbrgcpZ3f27hi8xrHQVkdc/export?gid=1166083124&format=csv"
     namelist = []
     dict = {}
@@ -40,7 +34,30 @@ def advanced_scrape():  # returns advanced player dictionary of {name : point} p
         del dict["Name "]
         dict = {key[:-1] if key[-1] == ' ' else key: value
                 for key, value in dict.items()}
-        return dict
+        return space_sanitizer(dict)
+
+
+
+def premier_in_advanced_standings():  # returns premier players in advanced
+    premier_data = get_premier_ids()
+    advanced_data = space_sanitizer()
+    advanced_name_list = list(advanced_data.keys())
+    premier_name_list = list(premier_data.keys())
+    advanced_in_premier = intersect(advanced_name_list, premier_name_list)
+    return advanced_in_premier
+
+
+def space_sanitizer(adict):
+    my_dictionary = {key[:-1] if key[-1] == ' ' else key: value
+                     for key, value in adict.items()}
+    return my_dictionary
+
+
+def remove_premier_from_advanced(adict: dict):
+    premier_players_in_advanced = premier_in_advanced_standings()
+    for i in premier_players_in_advanced:
+        del adict[i]
+    return adict
 
 
 def get_premier_ids():  # returns premier players dict with {name: id} pairs
@@ -59,6 +76,15 @@ def get_premier_ids():  # returns premier players dict with {name: id} pairs
             count += 1
 
         return id_dict
+
+def premier_name_and_points():
+    a = {}
+    prem_dict = get_premier_ids()
+    for i in prem_dict.values():
+        l = get_points(i)
+        print(l)
+        a[l[0]] = l[1]
+    return l
 
 
 def premier_name_list():  # returns list of premier player names
@@ -82,7 +108,9 @@ def get_points(player_id):  # returns a list containing premier player data of [
     playerDataFieldData = soup.find("div", {"id": "playerDataFieldData"})
     text = playerDataFieldData.text
     splitter = text.split('Name: ')
+    print(splitter)
     split2 = splitter[1].split('Depreciated Points Total: ')
+    print(split2)
     return split2
 
 
@@ -102,23 +130,4 @@ def intersect(a, b):  # returns intersection of 2 lists
     return list(set(a) & set(b))
 
 
-def premier_in_advanced_standings(): #returns premier players in advanced
-    premier_data = get_premier_ids()
-    advanced_data = space_sanitizer()
-    advanced_name_list = list(advanced_data.keys())
-    premier_name_list = list(premier_data.keys())
-    advanced_in_premier = intersect(advanced_name_list, premier_name_list)
-    return advanced_in_premier
-
-
-def space_sanitizer():
-    my_dictionary = advanced_scrape()
-    my_dictionary = {key[:-1] if key[-1] == ' ' else key: value
-                     for key, value in my_dictionary.items()}
-    return my_dictionary
-
-def remove_premier_from_advanced(adict: dict):
-    premier_players_in_advanced = premier_in_advanced_standings()
-
-
-print(premier_in_advanced_standings())
+print(premier_name_and_points())
